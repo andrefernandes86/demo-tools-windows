@@ -1,1 +1,2 @@
+wevtutil cl Security
 
